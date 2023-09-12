@@ -45,7 +45,6 @@ export class AppService implements OnApplicationShutdown {
     try {
       await this.redisClient.quit();
     } catch (error) {
-      console.error('Redisとの切断に失敗しました。');
       console.error(error);
     }
   }
