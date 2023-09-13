@@ -21,3 +21,4 @@
 
 2. Stop and start the container
 3. Repeat 2. several times.
+4. Try accessing http://localhost:3000/
