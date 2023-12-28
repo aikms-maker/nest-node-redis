@@ -101,10 +101,10 @@ jobs:
         id: release_notes
         run: |
           RELEASE_NOTES="修正内容\n"
-          for item in $(echo ${{ steps.notion_data.outputs.notion_response }} | jq -r '.results[] | "- " + .properties.Lenear.rich_text[0].plain_text + " " + .properties.Name.title[0].plain_text'); do
+          for item in $(echo "${{ steps.notion_data.outputs.notion_response }}" | jq -r '.results[] | "- " + .properties.Lenear.rich_text[0].plain_text + " " + .properties.Name.title[0].plain_text'); do
             RELEASE_NOTES+="$item\n"
           done
-          echo "::set-output name=release_notes::$RELEASE_NOTES"
+          echo -e "::set-output name=release_notes::$RELEASE_NOTES"
 
       # タグを切り、リリースノートを作成する
       - name: Create GitHub Release
