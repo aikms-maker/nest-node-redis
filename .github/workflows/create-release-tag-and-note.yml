@@ -35,6 +35,8 @@ jobs:
       - name: Generate release tag
         id: release_tag
         run: |
+          version="${{ github.event.inputs.version }}"
+          echo "input version: $version"
 
           # 前回のタグを取得して表示
           pre_tag="${{ steps.pre_tag.outputs.pre_tag }}"
