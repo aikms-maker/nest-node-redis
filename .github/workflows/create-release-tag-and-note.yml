@@ -52,6 +52,7 @@ jobs:
           echo ${version[2]}
           echo ${version[1]++}
           echo ${version[2]++}
+          echo "After incrementing: version[1] = ${version[1]}, version[2] = ${version[2]}"
           
           # 抽出したバージョン番号を表示
           echo "Extracted version: ${version[@]}"
