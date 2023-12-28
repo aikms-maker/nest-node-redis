@@ -105,14 +105,17 @@ jobs:
           while IFS= read -r line; do
             RELEASE_NOTES+="$line\n"
           done < <(echo $JSON_DATA | jq -r '.results[] | "- " + .properties.Lenear.rich_text[0].plain_text + " " + .properties.Name.title[0].plain_text')
-          echo -e "::set-output name=release_notes::$RELEASE_NOTES"
+      
+          # 環境ファイルを使用して環境変数を設定
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo -e "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # タグを切り、リリースノートを作成する
       - name: Create GitHub Release
         run: |
-          echo "Using GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
           gh release create ${{ steps.release_tag.outputs.release_tag }} \
             --title "naikist-${{ env.CURRENT_DATE }}" \
-            --notes "${{ steps.release_notes.outputs.release_notes }}"
+            --notes "$RELEASE_NOTES"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
