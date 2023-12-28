@@ -36,7 +36,7 @@ jobs:
         id: release_tag
         run: |
           set -e
-          
+
           input_version="${{ github.event.inputs.version }}"
           echo "input version: $input_version"
 
@@ -47,6 +47,9 @@ jobs:
           # "v"を取り除いてバージョン番号を抽出
           pre_tag="${pre_tag//v/}"
           IFS='.' read -r -a version <<< "$pre_tag"
+
+          echo ${version[1]}
+          echo ${version[2]}
           
           # 抽出したバージョン番号を表示
           echo "Extracted version: ${version[@]}"
