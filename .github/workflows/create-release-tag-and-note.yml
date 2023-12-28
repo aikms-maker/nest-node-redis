@@ -35,7 +35,19 @@ jobs:
       - name: Generate release tag
         id: release_tag
         run: |
-          IFS='.' read -r -a version <<< "${pre_tag//v/}"
+
+          # 前回のタグを取得して表示
+          pre_tag="${{ steps.pre_tag.outputs.pre_tag }}"
+          echo "Previous tag: $pre_tag"
+          
+          # "v"を取り除いてバージョン番号を抽出
+          pre_tag="${pre_tag//v/}"
+          IFS='.' read -r -a version <<< "$pre_tag"
+          
+          # 抽出したバージョン番号を表示
+          echo "Extracted version: ${version[@]}"
+
+          # バージョンアップのタイプを決定
           case ${{ github.event.inputs.version }} in
             'major')
               ((version[0]++))
@@ -50,7 +62,14 @@ jobs:
               ((version[2]++))
               ;;
           esac
+      
+          # 新しいタグを生成
           new_tag="v${version[0]}.${version[1]}.${version[2]}"
+      
+          # 生成した新しいタグを表示する
+          echo "New tag: $new_tag"
+      
+          # 出力に新しいタグをセット
           echo "::set-output name=release_tag::$new_tag"
 
       # 現在の日付を取得しyyyymmdd形式に変換する
