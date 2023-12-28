@@ -101,9 +101,10 @@ jobs:
         id: release_notes
         run: |
           RELEASE_NOTES="修正内容\n"
-          for item in $(echo "${{ steps.notion_data.outputs.notion_response }}" | jq -r '.results[] | "- " + .properties.Lenear.rich_text[0].plain_text + " " + .properties.Name.title[0].plain_text'); do
-            RELEASE_NOTES+="$item\n"
-          done
+          JSON_DATA='${{ steps.notion_data.outputs.notion_response }}'
+          while IFS= read -r line; do
+            RELEASE_NOTES+="$line\n"
+          done < <(echo $JSON_DATA | jq -r '.results[] | "- " + .properties.Lenear.rich_text[0].plain_text + " " + .properties.Name.title[0].plain_text')
           echo -e "::set-output name=release_notes::$RELEASE_NOTES"
 
       # タグを切り、リリースノートを作成する
