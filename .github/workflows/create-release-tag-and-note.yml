@@ -35,8 +35,8 @@ jobs:
       - name: Generate release tag
         id: release_tag
         run: |
-          version="${{ github.event.inputs.version }}"
-          echo "input version: $version"
+          input_version="${{ github.event.inputs.version }}"
+          echo "input version: $input_version"
 
           # 前回のタグを取得して表示
           pre_tag="${{ steps.pre_tag.outputs.pre_tag }}"
@@ -50,7 +50,7 @@ jobs:
           echo "Extracted version: ${version[@]}"
 
           # バージョンアップのタイプを決定
-          case ${{ github.event.inputs.version }} in
+          case $input_version in
             'major')
               ((version[0]++))
               version[1]=0
