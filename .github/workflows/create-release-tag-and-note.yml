@@ -50,7 +50,7 @@ jobs:
           echo "Extracted version: ${version[@]}"
 
           # バージョンアップのタイプを決定
-          case version in
+          case ${{ github.event.inputs.version }} in
             'major')
               ((version[0]++))
               version[1]=0
