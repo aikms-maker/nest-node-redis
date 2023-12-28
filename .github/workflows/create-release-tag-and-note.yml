@@ -112,3 +112,5 @@ jobs:
           gh release create ${{ steps.release_tag.outputs.release_tag }} \
             --title "naikist-${{ env.CURRENT_DATE }}" \
             --notes "${{ steps.release_notes.outputs.release_notes }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
