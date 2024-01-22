@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # 前回のりリースタグを取得する
+      # 前回のリリースタグを取得する
       - name: Get previous tag
         id: pre_tag
         run: |
@@ -103,46 +103,23 @@ jobs:
           fi
           echo "Release count: $COUNT"
           echo "RELEASE_COUNT=$COUNT" >> $GITHUB_ENV
-      
-      # Notionからリリースノート情報を取得する
-      - name: Get data from Notion
-        run: |
-          CURRENT_MILESTONE="naikist-${{ env.CURRENT_DATE }}"
-          RESPONSE=$(curl -X POST 'https://api.notion.com/v1/databases/b76806a2a57c47a3ad8062beaf7a5591/query' \
-            -H 'Authorization: Bearer ${{ secrets.NOTION_TOKEN }}' \
-            -H 'Content-Type: application/json' \
-            -H 'Notion-Version: 2022-06-28' \
-            --data '{
-              "filter": {
-                "property": "マイルストーン",
-                "select": {
-                  "equals": "'"$CURRENT_MILESTONE"'"
-                }
-              }
-            }')
-          echo "::set-output name=notion_response::$RESPONSE"
-        id: notion_data
 
       # リリースノートの本文を生成する
-      - name: Generate release notes
-        id: release_notes
+      - name: Generate release note
+        id: release_note
         run: |
-          RELEASE_NOTES="修正内容\n"
-          JSON_DATA='${{ steps.notion_data.outputs.notion_response }}'
-          while IFS= read -r line; do
-            RELEASE_NOTES+="$line\n"
-          done < <(echo $JSON_DATA | jq -r '.results[] | "- " + .properties.Lenear.rich_text[0].plain_text + " " + .properties.Name.title[0].plain_text')
-      
-          # 環境ファイルを使用して環境変数を設定
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo -e "$RELEASE_NOTES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "::set-output name=release_note::$(curl -X POST \
+            -H 'Accept: application/vnd.github.v3+json' \
+            -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
+            https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
+            -d '{\"tag_name\":\"${{ steps.release_tag.outputs.release_tag }}\", \"previous_tag_name\":\"${{ steps.pre_tag.outputs.pre_tag }}\"}' \
+            | jq .body | sed 's/"//g')"
 
       # タグを切り、リリースノートを作成する
       - name: Create GitHub Release
         run: |
           gh release create ${{ steps.release_tag.outputs.release_tag }} \
           --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
-            --notes "$RELEASE_NOTES"
+          --notes "${{ steps.release_note.outputs.release_note }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
