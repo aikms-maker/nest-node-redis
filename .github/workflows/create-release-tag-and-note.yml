@@ -81,6 +81,18 @@ jobs:
         id: current_date
         run: echo "CURRENT_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
+      # 同日のリリースカウントを取得
+      - name: Get today's release count
+        id: release_count
+        run: |
+          RELEASES=$(gh api repos/$GITHUB_REPOSITORY/releases --jq '.[] | select(.name | startswith("naikist-${{ env.CURRENT_DATE }}")) | .name' | sort)
+          COUNT=$(echo "${RELEASES}" | tail -n 1 | grep -o -E '\d+$')
+          if [[ -z "$COUNT" ]]; then
+            echo "RELEASE_COUNT=1" >> $GITHUB_ENV
+          else
+            echo "RELEASE_COUNT=$(($COUNT + 1))" >> $GITHUB_ENV
+          fi
+      
       # Notionからリリースノート情報を取得する
       - name: Get data from Notion
         run: |
@@ -119,7 +131,7 @@ jobs:
       - name: Create GitHub Release
         run: |
           gh release create ${{ steps.release_tag.outputs.release_tag }} \
-            --title "naikist-${{ env.CURRENT_DATE }}" \
+          --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
             --notes "$RELEASE_NOTES"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
