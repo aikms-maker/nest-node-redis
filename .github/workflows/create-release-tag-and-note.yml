@@ -118,7 +118,6 @@ jobs:
       # タグを切り、リリースノートを作成する
       - name: Create GitHub Release
         run: |
-          RELEASE_NOTES=$(gh release generate-notes --tag ${{ steps.release_tag.outputs.release_tag }} --previous-tag ${{ steps.pre_tag.outputs.pre_tag }})
           gh release create ${{ steps.release_tag.outputs.release_tag }} \
             --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
             --notes "${{ steps.release_note.outputs.release_note }}"
