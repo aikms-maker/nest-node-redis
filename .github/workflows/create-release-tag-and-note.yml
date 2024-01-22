@@ -85,12 +85,16 @@ jobs:
       - name: Get today's release count
         id: release_count
         run: |
-          # GitHubリポジトリから全リリースのリストを取得
-          ALL_RELEASES=$(gh api repos/$GITHUB_REPOSITORY/releases --jq '.[] | .name')
+          # GitHubリポジトリから全リリースのリストを取得（JSON形式で）
+          ALL_RELEASES_JSON=$(gh api repos/$GITHUB_REPOSITORY/releases --jq '.[] | {name: .name}')
+          echo "All releases (JSON): $ALL_RELEASES_JSON"
+        
+          # JSONからリリース名を抽出
+          ALL_RELEASES=$(echo "$ALL_RELEASES_JSON" | jq -r '.name')
           echo "All releases: $ALL_RELEASES"
         
           # 特定の日付にマッチするリリースをフィルタリング
-          RELEASES=$(echo "$ALL_RELEASES" | jq 'select(startswith("naikist-${{ env.CURRENT_DATE }}"))')
+          RELEASES=$(echo "$ALL_RELEASES" | jq -r 'select(startswith("naikist-${{ env.CURRENT_DATE }}"))')
           echo "Filtered releases: $RELEASES"
         
           # リリース名のリストをソート
