@@ -77,9 +77,10 @@ jobs:
           
           # 出力に新しいタグをセット
           echo "RELEASE_TAG=$new_tag" >> $GITHUB_ENV
-            # 現在の日付を取得しyyyymmdd形式に変換する
-            - name: Get current date
-              run: echo "CURRENT_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+      # 現在の日付を取得しyyyymmdd形式に変換する
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       # 同日のリリースカウントを取得
       - name: Get today's release count
