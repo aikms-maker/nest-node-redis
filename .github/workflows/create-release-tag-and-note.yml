@@ -89,8 +89,9 @@ jobs:
           LATEST_RELEASE_TITLE=$(gh api repos/$GITHUB_REPOSITORY/releases/latest --jq '.name')
           echo "Latest release title: $LATEST_RELEASE_TITLE"
         
-          # タイトルから日付部分を抽出
-          LATEST_RELEASE_DATE=$(echo "$LATEST_RELEASE_TITLE" | grep -o -E '\d{8}')
+          # タイトルを'-'で分割し、日付部分を取得
+          IFS='-' read -ra ADDR <<< "$LATEST_RELEASE_TITLE"
+          LATEST_RELEASE_DATE="${ADDR[1]}"
           echo "Latest release date: $LATEST_RELEASE_DATE"
         
           # 日付の比較とカウントの設定
