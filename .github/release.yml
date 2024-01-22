@@ -12,5 +12,6 @@ changelog:
     - title: Other Changes 🛠
       labels:
         - '*'
-  exclude-labels:
-    - 'release'
+    - title: All Changes 🚀
+      labels:
+        - 'release'
