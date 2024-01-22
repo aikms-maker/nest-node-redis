@@ -49,9 +49,6 @@ jobs:
           # "v"を取り除いてバージョン番号を抽出
           pre_tag="${pre_tag//v/}"
           IFS='.' read -r -a version <<< "$pre_tag"
-          
-          # 抽出したバージョン番号を表示
-          echo "Extracted version: ${version[@]}"
 
           # バージョンアップのタイプを決定
           case $input_version in
@@ -72,7 +69,6 @@ jobs:
           # 新しいタグを生成
           new_tag="v${version[0]}.${version[1]}.${version[2]}"
           
-          # 生成した新しいタグを表示する
           echo "New tag: $new_tag"
           
           # 出力に新しいタグをセット
@@ -87,12 +83,10 @@ jobs:
         run: |
           # 最新のリリースノートのタイトルを取得
           LATEST_RELEASE_TITLE=$(gh api repos/$GITHUB_REPOSITORY/releases/latest --jq '.name')
-          echo "Latest release title: $LATEST_RELEASE_TITLE"
         
           # タイトルを'-'で分割し、日付部分を取得
           IFS='-' read -ra ADDR <<< "$LATEST_RELEASE_TITLE"
           LATEST_RELEASE_DATE="${ADDR[1]}"
-          echo "Latest release date: $LATEST_RELEASE_DATE"
         
           # 日付の比較とカウントの設定
           if [[ "$LATEST_RELEASE_DATE" == "${{ env.CURRENT_DATE }}" ]]; then
@@ -101,7 +95,6 @@ jobs:
           else
             COUNT=1
           fi
-          echo "Release count: $COUNT"
           echo "RELEASE_COUNT=$COUNT" >> $GITHUB_ENV
 
       # リリースノートの本文を生成する
@@ -120,8 +113,6 @@ jobs:
       # タグを切り、リリースノートを作成する
       - name: Create GitHub Release
         run: |
-          echo "RELEASE_TAG: $RELEASE_TAG"
-          echo "PRE_TAG: $PRE_TAG"
           gh release create ${{ env.RELEASE_TAG }} \
             --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
             --notes "$RELEASE_NOTE"
