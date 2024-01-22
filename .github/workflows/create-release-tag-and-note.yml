@@ -104,12 +104,23 @@ jobs:
           echo "Release count: $COUNT"
           echo "RELEASE_COUNT=$COUNT" >> $GITHUB_ENV
 
-      # リリースノートの本文を生成し、リリースを作成する
-      - name: Create and Publish GitHub Release
+      # リリースノートの本文を生成する
+      - name: Generate release note
+        id: release_note
+        run: |
+          echo "::set-output name=release_note::$(curl -X POST \
+            -H 'Accept: application/vnd.github.v3+json' \
+            -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
+            https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
+            -d '{\"tag_name\":\"${{ steps.release_tag.outputs.release_tag }}\", \"previous_tag_name\":\"${{ steps.pre_tag.outputs.pre_tag }}\"}' \
+            | jq .body | sed 's/"//g')"
+
+      # タグを切り、リリースノートを作成する
+      - name: Create GitHub Release
         run: |
           RELEASE_NOTES=$(gh release generate-notes --tag ${{ steps.release_tag.outputs.release_tag }} --previous-tag ${{ steps.pre_tag.outputs.pre_tag }})
           gh release create ${{ steps.release_tag.outputs.release_tag }} \
             --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
-            --notes "$RELEASE_NOTES"
+            --notes "${{ steps.release_note.outputs.release_note }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
