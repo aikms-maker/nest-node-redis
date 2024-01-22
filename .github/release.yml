@@ -1,5 +1,8 @@
 changelog:
   categories:
+    - title: All Changes 🚀
+      labels:
+        - 'release'
     - title: New Features 🎉
       labels:
         - 'enhancement'
@@ -12,6 +15,3 @@ changelog:
     - title: Other Changes 🛠
       labels:
         - '*'
-    - title: All Changes 🚀
-      labels:
-        - 'release'
