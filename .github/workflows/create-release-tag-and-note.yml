@@ -110,7 +110,7 @@ jobs:
                   -H 'Accept: application/vnd.github.v3+json' \
                   -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
                   https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
-                  -d '{"tag_name":"${{ steps.release_tag.outputs.release_tag }}", "previous_tag_name":"${{ env.PRE_TAG }}"}' \
+                  -d '{"tag_name":"${{ env.RELEASE_TAG }}", "previous_tag_name":"${{ env.PRE_TAG }}"}' \
                   | jq -r .body)
                 echo "RELEASE_NOTE<<EOF" >> $GITHUB_ENV
                 echo "$RELEASE_NOTE" >> $GITHUB_ENV
