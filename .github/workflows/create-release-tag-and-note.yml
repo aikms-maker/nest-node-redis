@@ -88,15 +88,15 @@ jobs:
           # GitHubリポジトリから全リリースのリストを取得（JSON形式で）
           ALL_RELEASES_JSON=$(gh api repos/$GITHUB_REPOSITORY/releases --jq '.[] | {name: .name}')
           echo "All releases (JSON): $ALL_RELEASES_JSON"
-        
+
           # JSONからリリース名を抽出
           ALL_RELEASES=$(echo "$ALL_RELEASES_JSON" | jq -r '.name')
           echo "All releases: $ALL_RELEASES"
-        
+
           # 特定の日付にマッチするリリースをフィルタリング
           FILTERED_RELEASES=$(echo "$ALL_RELEASES_JSON" | jq -r '[.[] | select(.name | startswith("naikist-${{ env.CURRENT_DATE }}"))] | .[].name')
           echo "Filtered releases: $FILTERED_RELEASES"
-        
+
           # リリース名のリストをソート
           SORTED_RELEASES=$(echo "$FILTERED_RELEASES" | sort)
           echo "Sorted releases: $SORTED_RELEASES"
