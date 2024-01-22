@@ -94,11 +94,11 @@ jobs:
           echo "All releases: $ALL_RELEASES"
         
           # 特定の日付にマッチするリリースをフィルタリング
-          RELEASES=$(echo "$ALL_RELEASES" | jq -r 'select(startswith("naikist-${{ env.CURRENT_DATE }}"))')
-          echo "Filtered releases: $RELEASES"
+          FILTERED_RELEASES=$(echo "$ALL_RELEASES_JSON" | jq -r '[.[] | select(.name | startswith("naikist-${{ env.CURRENT_DATE }}"))] | .[].name')
+          echo "Filtered releases: $FILTERED_RELEASES"
         
           # リリース名のリストをソート
-          SORTED_RELEASES=$(echo "$RELEASES" | sort)
+          SORTED_RELEASES=$(echo "$FILTERED_RELEASES" | sort)
           echo "Sorted releases: $SORTED_RELEASES"
         
           # 最新のリリースからカウントを取得
