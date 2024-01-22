@@ -12,7 +12,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # ラベル名を取得する
       - name: Get label name
@@ -23,13 +23,19 @@ jobs:
             label_name=$(echo "enhancement")
           elif [ $branch_type == 'fix' ] || [ $branch_type == 'hotfix' ]; then
             label_name=$(echo "bug")
+          elif [ $branch_type == 'refactor' ]; then
+            label_name=$(echo "refactor")
+          elif [ $branch_type == 'staging' ]; then
+            label_name=$(echo "release")
           else
             label_name=""
           fi
-          echo "::set-output name=label_name::$label_name"
+          echo "LABEL_NAME=$label_name" >> $GITHUB_ENV
 
       # PRにラベルを付与する
       - name: Auto labeling
-        if: ${{ steps.label_name.outputs.label_name }}
+        if: ${{ env.LABEL_NAME }}
         run: |
-          gh pr edit ${{ github.event.pull_request.number }} --add-label ${{ steps.label_name.outputs.label_name }}
+          gh pr edit ${{ github.event.pull_request.number }} --add-label ${{ env.LABEL_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

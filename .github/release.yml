@@ -6,6 +6,11 @@ changelog:
     - title: Bug Fix 💊
       labels:
         - "bug"
+    - title: Refactoring 🧹
+      labels:
+        - "refactor"
     - title: Other Changes 🛠
       labels:
         - "*"
+  exclude-labels:
+    - 'exclude from release'
