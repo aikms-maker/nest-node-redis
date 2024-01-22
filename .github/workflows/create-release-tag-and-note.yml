@@ -97,8 +97,7 @@ jobs:
           # 日付の比較とカウントの設定
           if [[ "$LATEST_RELEASE_DATE" == "${{ env.CURRENT_DATE }}" ]]; then
             # タイトルの末尾からカウントを抽出してインクリメント
-            COUNT=$(echo "$LATEST_RELEASE_TITLE" | grep -o -E '\d+$')
-            COUNT=$(($COUNT + 1))
+            COUNT=$((${ADDR[2]} + 1))
           else
             COUNT=1
           fi
