@@ -85,12 +85,29 @@ jobs:
       - name: Get today's release count
         id: release_count
         run: |
-          RELEASES=$(gh api repos/$GITHUB_REPOSITORY/releases --jq '.[] | select(.name | startswith("naikist-${{ env.CURRENT_DATE }}")) | .name' | sort)
-          COUNT=$(echo "${RELEASES}" | tail -n 1 | grep -o -E '\d+$')
+          # GitHubリポジトリから全リリースのリストを取得
+          ALL_RELEASES=$(gh api repos/$GITHUB_REPOSITORY/releases --jq '.[] | .name')
+          echo "All releases: $ALL_RELEASES"
+        
+          # 特定の日付にマッチするリリースをフィルタリング
+          RELEASES=$(echo "$ALL_RELEASES" | jq 'select(startswith("naikist-${{ env.CURRENT_DATE }}"))')
+          echo "Filtered releases: $RELEASES"
+        
+          # リリース名のリストをソート
+          SORTED_RELEASES=$(echo "$RELEASES" | sort)
+          echo "Sorted releases: $SORTED_RELEASES"
+        
+          # 最新のリリースからカウントを取得
+          COUNT=$(echo "$SORTED_RELEASES" | tail -n 1 | grep -o -E '\d+$')
+          echo "Count: $COUNT"
+        
+          # カウントが空かどうかを確認し、リリースカウントを設定
           if [[ -z "$COUNT" ]]; then
             echo "RELEASE_COUNT=1" >> $GITHUB_ENV
+            echo "Release count set to 1"
           else
             echo "RELEASE_COUNT=$(($COUNT + 1))" >> $GITHUB_ENV
+            echo "Release count set to $(($COUNT + 1))"
           fi
       
       # Notionからリリースノート情報を取得する
