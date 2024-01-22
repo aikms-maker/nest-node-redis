@@ -27,13 +27,15 @@ jobs:
 
       # 前回のリリースタグを取得する
       - name: Get previous tag
-        id: pre_tag
         run: |
-          echo "::set-output name=pre_tag::$(curl -H 'Accept: application/vnd.github.v3+json' -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)"
+          PRE_TAG=$(curl -H 'Accept: application/vnd.github.v3+json' \
+            -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            | jq -r .tag_name)
+          echo "PRE_TAG=$PRE_TAG" >> $GITHUB_ENV
 
       # タグを生成する
       - name: Generate release tag
-        id: release_tag
         run: |
           set -e
 
@@ -41,7 +43,7 @@ jobs:
           echo "input version: $input_version"
 
           # 前回のタグを取得して表示
-          pre_tag="${{ steps.pre_tag.outputs.pre_tag }}"
+          pre_tag="${{ env.PRE_TAG }}"
           echo "Previous tag: $pre_tag"
           
           # "v"を取り除いてバージョン番号を抽出
@@ -66,62 +68,59 @@ jobs:
               ((version[2]=version[2]+1))
               ;;
           esac
-      
+
           # 新しいタグを生成
           new_tag="v${version[0]}.${version[1]}.${version[2]}"
-      
+          
           # 生成した新しいタグを表示する
           echo "New tag: $new_tag"
-      
+          
           # 出力に新しいタグをセット
-          echo "::set-output name=release_tag::$new_tag"
+          echo "RELEASE_TAG=$new_tag" >> $GITHUB_ENV
+            # 現在の日付を取得しyyyymmdd形式に変換する
+            - name: Get current date
+              run: echo "CURRENT_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
-      # 現在の日付を取得しyyyymmdd形式に変換する
-      - name: Get current date
-        id: current_date
-        run: echo "CURRENT_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+            # 同日のリリースカウントを取得
+            - name: Get today's release count
+              run: |
+                # 最新のリリースノートのタイトルを取得
+                LATEST_RELEASE_TITLE=$(gh api repos/$GITHUB_REPOSITORY/releases/latest --jq '.name')
+                echo "Latest release title: $LATEST_RELEASE_TITLE"
+              
+                # タイトルを'-'で分割し、日付部分を取得
+                IFS='-' read -ra ADDR <<< "$LATEST_RELEASE_TITLE"
+                LATEST_RELEASE_DATE="${ADDR[1]}"
+                echo "Latest release date: $LATEST_RELEASE_DATE"
+              
+                # 日付の比較とカウントの設定
+                if [[ "$LATEST_RELEASE_DATE" == "${{ env.CURRENT_DATE }}" ]]; then
+                  # タイトルの末尾からカウントを抽出してインクリメント
+                  COUNT=$((${ADDR[2]} + 1))
+                else
+                  COUNT=1
+                fi
+                echo "Release count: $COUNT"
+                echo "RELEASE_COUNT=$COUNT" >> $GITHUB_ENV
 
-      # 同日のリリースカウントを取得
-      - name: Get today's release count
-        id: release_count
-        run: |
-          # 最新のリリースノートのタイトルを取得
-          LATEST_RELEASE_TITLE=$(gh api repos/$GITHUB_REPOSITORY/releases/latest --jq '.name')
-          echo "Latest release title: $LATEST_RELEASE_TITLE"
-        
-          # タイトルを'-'で分割し、日付部分を取得
-          IFS='-' read -ra ADDR <<< "$LATEST_RELEASE_TITLE"
-          LATEST_RELEASE_DATE="${ADDR[1]}"
-          echo "Latest release date: $LATEST_RELEASE_DATE"
-        
-          # 日付の比較とカウントの設定
-          if [[ "$LATEST_RELEASE_DATE" == "${{ env.CURRENT_DATE }}" ]]; then
-            # タイトルの末尾からカウントを抽出してインクリメント
-            COUNT=$((${ADDR[2]} + 1))
-          else
-            COUNT=1
-          fi
-          echo "Release count: $COUNT"
-          echo "RELEASE_COUNT=$COUNT" >> $GITHUB_ENV
+            # リリースノートの本文を生成する
+            - name: Generate release note
+              run: |
+                RELEASE_NOTE=$(curl -X POST \
+                  -H 'Accept: application/vnd.github.v3+json' \
+                  -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
+                  https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
+                  -d '{"tag_name":"${{ steps.release_tag.outputs.release_tag }}", "previous_tag_name":"${{ env.PRE_TAG }}"}' \
+                  | jq -r .body)
+                echo "RELEASE_NOTE<<EOF" >> $GITHUB_ENV
+                echo "$RELEASE_NOTE" >> $GITHUB_ENV
+                echo "EOF" >> $GITHUB_ENV
 
-      # リリースノートの本文を生成する
-      - name: Generate release note
-        run: |
-          RELEASE_NOTE=$(curl -X POST \
-            -H 'Accept: application/vnd.github.v3+json' \
-            -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
-            https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
-            -d '{"tag_name":"${{ steps.release_tag.outputs.release_tag }}", "previous_tag_name":"${{ steps.pre_tag.outputs.pre_tag }}"}' \
-            | jq -r .body)
-          echo "RELEASE_NOTE<<EOF" >> $GITHUB_ENV
-          echo "$RELEASE_NOTE" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      # タグを切り、リリースノートを作成する
-      - name: Create GitHub Release
-        run: |
-          gh release create ${{ steps.release_tag.outputs.release_tag }} \
-            --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
-            --notes "$RELEASE_NOTE"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # タグを切り、リリースノートを作成する
+            - name: Create GitHub Release
+              run: |
+                gh release create ${{ env.RELEASE_TAG }} \
+                  --title "naikist-${{ env.CURRENT_DATE }}-${{ env.RELEASE_COUNT }}" \
+                  --notes "$RELEASE_NOTE"
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
